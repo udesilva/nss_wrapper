@@ -1,6 +1,11 @@
 ChangeLog
 ==========
 
+version 1.1.2 (released 2015-12-17)
+  * Fixed segfault while reloading hosts file
+  * Fixed issue where are not fault tolerant if an alias has already
+    been added
+
 version 1.1.1 (released 2015-11-23)
   * Fixed nss_wrapper build on Solaris
 
