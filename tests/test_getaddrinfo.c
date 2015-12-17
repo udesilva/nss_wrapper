@@ -5,8 +5,10 @@
 #include <setjmp.h>
 #include <cmocka.h>
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <sys/socket.h>
@@ -79,6 +81,54 @@ static void test_nwrap_getaddrinfo(void **state)
 	inet_ntop(AF_INET6, (void *)&sin6p->sin6_addr, ip6, sizeof(ip6));
 
 	assert_string_equal(ip6, "::13");
+
+	freeaddrinfo(res);
+}
+
+/*
+ * The purpose of this test is to verify that reloading of the hosts
+ * file (triggered by a timestamp change) correctly frees and re-creates
+ * the internal data structures, so we do not end up using invalid memory.
+ */
+static void test_nwrap_getaddrinfo_reload(void **state)
+{
+	struct addrinfo hints;
+	struct addrinfo *res = NULL;
+	const char *env;
+	char touch_cmd[1024];
+	int rc;
+
+	(void) state; /* unused */
+
+	/* IPv4 */
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+	hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
+	hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
+	hints.ai_protocol = 0;          /* Any protocol */
+	hints.ai_canonname = NULL;
+	hints.ai_addr = NULL;
+	hints.ai_next = NULL;
+
+	rc = getaddrinfo("127.0.0.11", NULL, &hints, &res);
+	assert_int_equal(rc, 0);
+	assert_non_null(res);
+
+	freeaddrinfo(res);
+	res = NULL;
+
+	env = getenv("NSS_WRAPPER_HOSTS");
+	assert_non_null(env);
+
+	snprintf(touch_cmd, sizeof(touch_cmd), "touch %s", env);
+
+	rc = system(touch_cmd);
+	assert_return_code(rc, errno);
+
+	rc = getaddrinfo("127.0.0.11", NULL, &hints, &res);
+	assert_int_equal(rc, 0);
+	assert_non_null(res);
+
 
 	freeaddrinfo(res);
 }
@@ -661,6 +711,7 @@ int main(void) {
 
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_nwrap_getaddrinfo),
+		cmocka_unit_test(test_nwrap_getaddrinfo_reload),
 		cmocka_unit_test(test_nwrap_getaddrinfo_any),
 		cmocka_unit_test(test_nwrap_getaddrinfo_local),
 		cmocka_unit_test(test_nwrap_getaddrinfo_name),
