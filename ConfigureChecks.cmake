@@ -191,6 +191,9 @@ check_prototype_definition(getnameinfo
 
 # STRUCT MEMBERS
 check_struct_has_member("struct sockaddr" sa_len "sys/socket.h netinet/in.h" HAVE_STRUCT_SOCKADDR_SA_LEN)
+check_struct_has_member("struct passwd" pw_class "pwd.h" HAVE_STRUCT_PASSWD_PW_CLASS)
+check_struct_has_member("struct passwd" pw_change "pwd.h" HAVE_STRUCT_PASSWD_PW_CHANGE)
+check_struct_has_member("struct passwd" pw_expire "pwd.h" HAVE_STRUCT_PASSWD_PW_EXPIRE)
 
 # IPV6
 check_c_source_compiles("

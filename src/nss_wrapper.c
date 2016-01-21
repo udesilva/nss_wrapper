@@ -154,6 +154,14 @@ typedef nss_status_t NSS_STATUS;
 #define SAFE_FREE(x) do { if ((x) != NULL) {free(x); (x)=NULL;} } while(0)
 #endif
 
+#ifndef discard_const
+#define discard_const(ptr) ((void *)((uintptr_t)(ptr)))
+#endif
+
+#ifndef discard_const_p
+#define discard_const_p(type, ptr) ((type *)discard_const(ptr))
+#endif
+
 #ifdef HAVE_IPV6
 #define NWRAP_INET_ADDRSTRLEN INET6_ADDRSTRLEN
 #else
@@ -1962,6 +1970,28 @@ static bool nwrap_pw_parse_line(struct nwrap_cache *nwrap, char *line)
 	c = p;
 
 	NWRAP_LOG(NWRAP_LOG_TRACE, "gid[%u]\n", pw->pw_gid);
+
+#ifdef HAVE_STRUCT_PASSWD_PW_CLASS
+	pw->pw_class = discard_const_p(char, "");
+
+	NWRAP_LOG(NWRAP_LOG_TRACE, "class[%s]", pw->pw_class);
+#endif /* HAVE_STRUCT_PASSWD_PW_CLASS */
+
+#ifdef HAVE_STRUCT_PASSWD_PW_CHANGE
+	pw->pw_change = 0;
+
+	NWRAP_LOG(NWRAP_LOG_TRACE,
+		  "change[%lu]",
+		  (unsigned long)pw->pw_change);
+#endif /* HAVE_STRUCT_PASSWD_PW_CHANGE */
+
+#ifdef HAVE_STRUCT_PASSWD_PW_EXPIRE
+	pw->pw_expire = 0;
+
+	NWRAP_LOG(NWRAP_LOG_TRACE,
+		  "expire[%lu]",
+		  (unsigned long)pw->pw_expire);
+#endif /* HAVE_STRUCT_PASSWD_PW_EXPIRE */
 
 	/* gecos */
 	p = strchr(c, ':');
