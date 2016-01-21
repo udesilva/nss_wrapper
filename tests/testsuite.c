@@ -75,6 +75,15 @@ static bool copy_passwd(const struct passwd *pwd, struct passwd *p)
 	p->pw_passwd	= strdup(pwd->pw_passwd);
 	p->pw_uid	= pwd->pw_uid;
 	p->pw_gid	= pwd->pw_gid;
+#ifdef HAVE_STRUCT_PASSWD_PW_CLASS
+	p->pw_class	= strdup(pwd->pw_class);
+#endif
+#ifdef HAVE_STRUCT_PASSWD_PW_CHANGE
+	p->pw_change	= pwd->pw_change;
+#endif
+#ifdef HAVE_STRUCT_PASSWD_PW_EXPIRE
+	p->pw_expire	= pwd->pw_expire;
+#endif
 	p->pw_gecos	= strdup(pwd->pw_gecos);
 	p->pw_dir	= strdup(pwd->pw_dir);
 	p->pw_shell	= strdup(pwd->pw_shell);
@@ -86,6 +95,9 @@ static void free_passwd(struct passwd *p)
 {
 	SAFE_FREE(p->pw_name);
 	SAFE_FREE(p->pw_passwd);
+#ifdef HAVE_STRUCT_PASSWD_PW_CLASS
+	SAFE_FREE(p->pw_class);
+#endif
 	SAFE_FREE(p->pw_gecos);
 	SAFE_FREE(p->pw_dir);
 	SAFE_FREE(p->pw_shell);
