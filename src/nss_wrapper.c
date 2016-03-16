@@ -5451,7 +5451,7 @@ static int nwrap_getnameinfo(const struct sockaddr *sa, socklen_t salen,
 		if (he != NULL && he->h_name != NULL) {
 			if (strlen(he->h_name) >= hostlen)
 				return EAI_OVERFLOW;
-			strcpy(host, he->h_name);
+			snprintf(host, hostlen, "%s", he->h_name);
 			if (flags & NI_NOFQDN)
 				host[strcspn(host, ".")] = '\0';
 		} else {
@@ -5469,7 +5469,7 @@ static int nwrap_getnameinfo(const struct sockaddr *sa, socklen_t salen,
 		if (service != NULL) {
 			if (strlen(service->s_name) >= servlen)
 				return EAI_OVERFLOW;
-			strcpy(serv, service->s_name);
+			snprintf(serv, servlen, "%s", service->s_name);
 		} else {
 			if (snprintf(serv, servlen, "%u", port) >= (int) servlen)
 				return EAI_OVERFLOW;
