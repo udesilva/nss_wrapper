@@ -433,9 +433,11 @@ static bool test_nwrap_enum_passwd(struct passwd **pwd_array_p,
 static bool test_nwrap_enum_r_passwd(struct passwd **pwd_array_p,
 				     size_t *num_pwd_p)
 {
-	struct passwd pwd, *pwdp;
 	struct passwd *pwd_array = NULL;
 	size_t num_pwd = 0;
+/* Skip these tests if the platform does not provide getpwent_r() */
+#ifdef HAVE_GETPWENT_R
+	struct passwd pwd, *pwdp;
 	char buffer[4096];
 	int ret;
 
@@ -450,7 +452,7 @@ static bool test_nwrap_enum_r_passwd(struct passwd **pwd_array_p,
 		if (pwdp == NULL) {
 			break;
 		}
-#else
+#else /* HAVE_SOLARIS_GETPWENT_R */
 		ret = getpwent_r(&pwd, buffer, sizeof(buffer), &pwdp);
 		if (ret != 0) {
 			if (ret != ENOENT) {
@@ -458,7 +460,7 @@ static bool test_nwrap_enum_r_passwd(struct passwd **pwd_array_p,
 			}
 			break;
 		}
-#endif
+#endif /* HAVE_SOLARIS_GETPWENT_R */
 		print_passwd(&pwd);
 		if (pwd_array_p && num_pwd_p) {
 			pwd_array = realloc(pwd_array, sizeof(struct passwd) * (num_pwd + 1));
@@ -470,6 +472,7 @@ static bool test_nwrap_enum_r_passwd(struct passwd **pwd_array_p,
 
 	DEBUG("Testing endpwent\n");
 	endpwent();
+#endif /* HAVE_GETPWENT_R */
 
 	if (pwd_array_p) {
 		*pwd_array_p = pwd_array;
@@ -598,9 +601,11 @@ static bool test_nwrap_enum_group(struct group **grp_array_p,
 static bool test_nwrap_enum_r_group(struct group **grp_array_p,
 				    size_t *num_grp_p)
 {
-	struct group grp, *grpp;
 	struct group *grp_array = NULL;
 	size_t num_grp = 0;
+/* Skip these tests if the platform does not provide getgrent_r() */
+#ifdef HAVE_GETGRENT_R
+	struct group grp, *grpp;
 	char buffer[4096];
 	int ret;
 
@@ -615,7 +620,7 @@ static bool test_nwrap_enum_r_group(struct group **grp_array_p,
 		if (grpp == NULL) {
 			break;
 		}
-#else
+#else /* HAVE_SOLARIS_GETGRENT_R */
 		ret = getgrent_r(&grp, buffer, sizeof(buffer), &grpp);
 		if (ret != 0) {
 			if (ret != ENOENT) {
@@ -623,7 +628,7 @@ static bool test_nwrap_enum_r_group(struct group **grp_array_p,
 			}
 			break;
 		}
-#endif
+#endif /* HAVE_SOLARIS_GETGRENT_R */
 		print_group(&grp);
 		if (grp_array_p && num_grp_p) {
 			grp_array = realloc(grp_array, sizeof(struct group) * (num_grp + 1));
@@ -635,6 +640,7 @@ static bool test_nwrap_enum_r_group(struct group **grp_array_p,
 
 	DEBUG("Testing endgrent\n");
 	endgrent();
+#endif /* HAVE_GETGRENT_R */
 
 	if (grp_array_p) {
 		*grp_array_p = grp_array;
