@@ -142,6 +142,12 @@ typedef nss_status_t NSS_STATUS;
 #define PRINTF_ATTRIBUTE(a,b)
 #endif /* HAVE_ATTRIBUTE_PRINTF_FORMAT */
 
+#ifdef HAVE_CONSTRUCTOR_ATTRIBUTE
+#define CONSTRUCTOR_ATTRIBUTE __attribute__ ((constructor))
+#else
+#define CONSTRUCTOR_ATTRIBUTE
+#endif /* HAVE_CONSTRUCTOR_ATTRIBUTE */
+
 #ifdef HAVE_DESTRUCTOR_ATTRIBUTE
 #define DESTRUCTOR_ATTRIBUTE __attribute__ ((destructor))
 #else
@@ -796,6 +802,7 @@ static struct nwrap_he nwrap_he_global;
 static void nwrap_init(void);
 static bool nwrap_gr_parse_line(struct nwrap_cache *nwrap, char *line);
 static void nwrap_gr_unload(struct nwrap_cache *nwrap);
+void nwrap_constructor(void) CONSTRUCTOR_ATTRIBUTE;
 void nwrap_destructor(void) DESTRUCTOR_ATTRIBUTE;
 
 /*********************************************************
@@ -1560,10 +1567,6 @@ static void nwrap_init(void)
 	NWRAP_LOCK(nwrap_sp_global);
 
 	nwrap_initialized = true;
-
-	/* Initialize pthread_atfork handlers */
-	pthread_atfork(&nwrap_thread_prepare, &nwrap_thread_parent,
-		       &nwrap_thread_child);
 
 	env = getenv("NSS_WRAPPER_MAX_HOSTENTS");
 	if (env != NULL) {
@@ -5527,6 +5530,22 @@ int gethostname(char *name, size_t len)
 	}
 
 	return nwrap_gethostname(name, len);
+}
+
+/****************************
+ * CONSTRUCTOR
+ ***************************/
+void nwrap_constructor(void)
+{
+	pthread_atfork(&nwrap_thread_prepare,
+		       &nwrap_thread_parent,
+		       &nwrap_thread_child);
+
+	/*
+	 * Here is safe place to call nwrap_init() and initialize data
+	 * for the main process.
+	 */
+	nwrap_init();
 }
 
 /****************************
