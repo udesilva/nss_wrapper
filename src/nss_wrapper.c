@@ -298,11 +298,13 @@ struct nwrap_libc_fns {
 	int (*_libc_getpwuid_r)(uid_t uid, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result);
 	void (*_libc_setpwent)(void);
 	struct passwd *(*_libc_getpwent)(void);
-#ifdef HAVE_SOLARIS_GETPWENT_R
+#ifdef HAVE_GETPWENT_R
+#  ifdef HAVE_SOLARIS_GETPWENT_R
 	struct passwd *(*_libc_getpwent_r)(struct passwd *pwbuf, char *buf, size_t buflen);
-#else
+#  else /* HAVE_SOLARIS_GETPWENT_R */
 	int (*_libc_getpwent_r)(struct passwd *pwbuf, char *buf, size_t buflen, struct passwd **pwbufp);
-#endif
+#  endif /* HAVE_SOLARIS_GETPWENT_R */
+#endif /* HAVE_GETPWENT_R */
 	void (*_libc_endpwent)(void);
 	int (*_libc_initgroups)(const char *user, gid_t gid);
 	struct group *(*_libc_getgrnam)(const char *name);
@@ -311,11 +313,13 @@ struct nwrap_libc_fns {
 	int (*_libc_getgrgid_r)(gid_t gid, struct group *grp, char *buf, size_t buflen, struct group **result);
 	void (*_libc_setgrent)(void);
 	struct group *(*_libc_getgrent)(void);
-#ifdef HAVE_SOLARIS_GETGRENT_R
+#ifdef HAVE_GETGRENT_R
+#  ifdef HAVE_SOLARIS_GETGRENT_R
 	struct group *(*_libc_getgrent_r)(struct group *group, char *buf, size_t buflen);
-#else
+#  else /* HAVE_SOLARIS_GETGRENT_R */
 	int (*_libc_getgrent_r)(struct group *group, char *buf, size_t buflen, struct group **result);
-#endif
+#  endif /* HAVE_SOLARIS_GETGRENT_R */
+#endif /* HAVE_GETGRENT_R */
 	void (*_libc_endgrent)(void);
 	int (*_libc_getgrouplist)(const char *user, gid_t group, gid_t *groups, int *ngroups);
 
@@ -1073,7 +1077,8 @@ static struct passwd *libc_getpwent(void)
 	return nwrap_main_global->libc->fns->_libc_getpwent();
 }
 
-#ifdef HAVE_SOLARIS_GETPWENT_R
+#ifdef HAVE_GETPWENT_R
+#  ifdef HAVE_SOLARIS_GETPWENT_R
 static struct passwd *libc_getpwent_r(struct passwd *pwdst,
 				      char *buf,
 				      int buflen)
@@ -1084,7 +1089,7 @@ static struct passwd *libc_getpwent_r(struct passwd *pwdst,
 							      buf,
 							      buflen);
 }
-#else /* HAVE_SOLARIS_GETPWENT_R */
+#  else /* HAVE_SOLARIS_GETPWENT_R */
 static int libc_getpwent_r(struct passwd *pwdst,
 			   char *buf,
 			   size_t buflen,
@@ -1097,7 +1102,8 @@ static int libc_getpwent_r(struct passwd *pwdst,
 							      buflen,
 							      pwdstp);
 }
-#endif /* HAVE_SOLARIS_GETPWENT_R */
+#  endif /* HAVE_SOLARIS_GETPWENT_R */
+#endif /* HAVE_GETPWENT_R */
 
 static void libc_endpwent(void)
 {
@@ -1190,7 +1196,7 @@ static struct group *libc_getgrent(void)
 }
 
 #ifdef HAVE_GETGRENT_R
-#ifdef HAVE_SOLARIS_GETGRENT_R
+#  ifdef HAVE_SOLARIS_GETGRENT_R
 static struct group *libc_getgrent_r(struct group *group,
 				     char *buf,
 				     size_t buflen)
@@ -1201,7 +1207,7 @@ static struct group *libc_getgrent_r(struct group *group,
 							      buf,
 							      buflen);
 }
-#else /* !HAVE_SOLARIS_GETGRENT_R */
+#  else /* HAVE_SOLARIS_GETGRENT_R */
 static int libc_getgrent_r(struct group *group,
 			   char *buf,
 			   size_t buflen,
@@ -1214,7 +1220,7 @@ static int libc_getgrent_r(struct group *group,
 							      buflen,
 							      result);
 }
-#endif /* HAVE_SOLARIS_GETGRENT_R */
+#  endif /* HAVE_SOLARIS_GETGRENT_R */
 #endif /* HAVE_GETGRENT_R */
 
 static void libc_endgrent(void)
@@ -4423,6 +4429,7 @@ struct passwd *getpwent(void)
  *   GETPWENT_R
  ***************************************************************************/
 
+#ifdef HAVE_GETPWENT_R
 static int nwrap_getpwent_r(struct passwd *pwdst, char *buf,
 			    size_t buflen, struct passwd **pwdstp)
 {
@@ -4440,7 +4447,7 @@ static int nwrap_getpwent_r(struct passwd *pwdst, char *buf,
 	return ENOENT;
 }
 
-#ifdef HAVE_SOLARIS_GETPWENT_R
+#  ifdef HAVE_SOLARIS_GETPWENT_R
 struct passwd *getpwent_r(struct passwd *pwdst, char *buf, int buflen)
 {
 	struct passwd *pwdstp = NULL;
@@ -4456,7 +4463,7 @@ struct passwd *getpwent_r(struct passwd *pwdst, char *buf, int buflen)
 
 	return pwdstp;
 }
-#else /* HAVE_SOLARIS_GETPWENT_R */
+#  else /* HAVE_SOLARIS_GETPWENT_R */
 int getpwent_r(struct passwd *pwdst, char *buf,
 	       size_t buflen, struct passwd **pwdstp)
 {
@@ -4466,7 +4473,8 @@ int getpwent_r(struct passwd *pwdst, char *buf,
 
 	return nwrap_getpwent_r(pwdst, buf, buflen, pwdstp);
 }
-#endif /* HAVE_SOLARIS_GETPWENT_R */
+#  endif /* HAVE_SOLARIS_GETPWENT_R */
+#endif /* HAVE_GETPWENT_R */
 
 /****************************************************************************
  *   ENDPWENT
@@ -4729,6 +4737,7 @@ struct group *getgrent(void)
  *   GETGRENT_R
  ***************************************************************************/
 
+#ifdef HAVE_GETGRENT_R
 static int nwrap_getgrent_r(struct group *grdst, char *buf,
 			    size_t buflen, struct group **grdstp)
 {
@@ -4746,7 +4755,7 @@ static int nwrap_getgrent_r(struct group *grdst, char *buf,
 	return ENOENT;
 }
 
-#ifdef HAVE_SOLARIS_GETGRENT_R
+#  ifdef HAVE_SOLARIS_GETGRENT_R
 struct group *getgrent_r(struct group *src, char *buf, int buflen)
 {
 	struct group *grdstp = NULL;
@@ -4763,7 +4772,7 @@ struct group *getgrent_r(struct group *src, char *buf, int buflen)
 
 	return grdstp;
 }
-#else /* HAVE_SOLARIS_GETGRENT_R */
+#  else /* HAVE_SOLARIS_GETGRENT_R */
 int getgrent_r(struct group *src, char *buf,
 	       size_t buflen, struct group **grdstp)
 {
@@ -4773,7 +4782,8 @@ int getgrent_r(struct group *src, char *buf,
 
 	return nwrap_getgrent_r(src, buf, buflen, grdstp);
 }
-#endif /* HAVE_SOLARIS_GETGRENT_R */
+#  endif /* HAVE_SOLARIS_GETGRENT_R */
+#endif /* HAVE_GETGRENT_R */
 
 /****************************************************************************
  *   ENDGRENT
