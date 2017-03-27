@@ -5546,28 +5546,32 @@ void nwrap_destructor(void)
 		struct nwrap_main *m = nwrap_main_global;
 
 		/* libc */
-		SAFE_FREE(m->libc->fns);
-		if (m->libc->handle != NULL) {
-			dlclose(m->libc->handle);
+		if (m->libc != NULL) {
+			SAFE_FREE(m->libc->fns);
+			if (m->libc->handle != NULL) {
+				dlclose(m->libc->handle);
+			}
+			if (m->libc->nsl_handle != NULL) {
+				dlclose(m->libc->nsl_handle);
+			}
+			if (m->libc->sock_handle != NULL) {
+				dlclose(m->libc->sock_handle);
+			}
+			SAFE_FREE(m->libc);
 		}
-		if (m->libc->nsl_handle != NULL) {
-			dlclose(m->libc->nsl_handle);
-		}
-		if (m->libc->sock_handle != NULL) {
-			dlclose(m->libc->sock_handle);
-		}
-		SAFE_FREE(m->libc);
 
 		/* backends */
-		for (i = 0; i < m->num_backends; i++) {
-			struct nwrap_backend *b = &(m->backends[i]);
+		if (m->backends != NULL) {
+			for (i = 0; i < m->num_backends; i++) {
+				struct nwrap_backend *b = &(m->backends[i]);
 
-			if (b->so_handle != NULL) {
-				dlclose(b->so_handle);
+				if (b->so_handle != NULL) {
+					dlclose(b->so_handle);
+				}
+				SAFE_FREE(b->fns);
 			}
-			SAFE_FREE(b->fns);
+			SAFE_FREE(m->backends);
 		}
-		SAFE_FREE(m->backends);
 	}
 
 	if (nwrap_pw_global.cache != NULL) {
