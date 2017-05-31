@@ -5537,6 +5537,12 @@ int gethostname(char *name, size_t len)
  ***************************/
 void nwrap_constructor(void)
 {
+	/*
+	 * If we hold a lock and the application forks, then the child
+	 * is not able to unlock the mutex and we are in a deadlock.
+	 *
+	 * Setting these handlers should prevent such deadlocks.
+	 */
 	pthread_atfork(&nwrap_thread_prepare,
 		       &nwrap_thread_parent,
 		       &nwrap_thread_child);
